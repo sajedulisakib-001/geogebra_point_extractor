@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>GeoGebra Point Extractor</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h2>GeoGebra Point Extractor</h2>
+
+    <label>Loop mode</label>
+    <select id="loopMode">
+      <option value="auto">Auto</option>
+      <option value="custom">Custom</option>
+    </select>
+
+    <div id="customBox" class="hidden">
+      <label>Custom loop limit</label>
+      <input id="loopLimit" type="number" min="1" max="100" value="3">
+    </div>
+
+    <label>Skipped points</label>
+    <input id="skippedPoints" type="text" value="X,Y,X1,Y1">
+
+    <label>Output</label>
+    <textarea id="output" placeholder="Coordinates will appear here..." readonly></textarea>
+
+    <button id="getData">Get Data</button>
+    <div id="status"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

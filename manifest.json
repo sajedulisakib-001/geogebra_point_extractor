@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "GeoGebra Point Extractor",
+  "version": "1.0.0",
+  "description": "Extract existing GeoGebra point coordinates from the active tab.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "action": {
+    "default_title": "GeoGebra Point Extractor",
+    "default_popup": "popup.html"
+  }
+}
