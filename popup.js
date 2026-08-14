@@ -233,7 +233,7 @@ function extractGeoGebraPoints(config) {
     }));
 
     const lines = pointCoordinates.map(point =>
-        `glVertex2f(${point.x.toFixed(2)}, ${point.y.toFixed(2)})//${point.name}`
+        `glVertex2f(${point.x.toFixed(2)}, ${point.y.toFixed(2)});//${point.name}`
     );
 
     return {
