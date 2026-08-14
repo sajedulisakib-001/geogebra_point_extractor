@@ -54,6 +54,24 @@ button:hover {
   background: #1d4ed8;
 }
 
+.btnRow {
+  display: flex;
+  gap: 8px;
+}
+
+.btnRow button {
+  width: auto;
+  flex: 1;
+}
+
+button.secondary {
+  background: #6b7280;
+}
+
+button.secondary:hover {
+  background: #4b5563;
+}
+
 .hidden {
   display: none;
 }

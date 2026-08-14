@@ -5,6 +5,7 @@ const skippedPoints = document.getElementById("skippedPoints");
 const output = document.getElementById("output");
 const getData = document.getElementById("getData");
 const status = document.getElementById("status");
+const copyBtn = document.getElementById("copyBtn");
 
 loopMode.addEventListener("change", () => {
   customBox.classList.toggle("hidden", loopMode.value !== "custom");
@@ -79,6 +80,33 @@ getData.addEventListener("click", async () => {
       `${data.count} point(s) found. Loop limit used: ${data.loopLimitUsed}.`;
   } catch (error) {
     status.textContent = error.message;
+  }
+});
+
+copyBtn.addEventListener("click", async () => {
+  if (!output.value) {
+    status.textContent = "Nothing to copy yet.";
+    return;
+  }
+
+  const originalLabel = copyBtn.textContent;
+
+  const showCopied = () => {
+    copyBtn.textContent = "Copied!";
+    status.textContent = "Copied to clipboard.";
+    setTimeout(() => {
+      copyBtn.textContent = originalLabel;
+    }, 1200);
+  };
+
+  try {
+    await navigator.clipboard.writeText(output.value);
+    showCopied();
+  } catch (e) {
+    // Fallback for contexts where the Clipboard API is blocked
+    output.select();
+    document.execCommand("copy");
+    showCopied();
   }
 });
 
