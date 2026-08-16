@@ -77,8 +77,12 @@ getData.addEventListener("click", async () => {
 
     const blocks = data.groups.map(group => {
       const header = group.name ? `// ${group.name}\n` : "";
+      const colorLine = group.color
+        ? `glColor3f(${group.color.r.toFixed(2)}, ${group.color.g.toFixed(2)}, ${group.color.b.toFixed(2)});\n`
+        : "";
       return (
         header +
+        colorLine +
         "glBegin(GL_POLYGON);\n\t" +
         group.lines.join("\n\t") +
         "\nglEnd();"
@@ -177,6 +181,30 @@ function extractGeoGebraPoints(config) {
         }
     }
 
+    // Labels can carry a color suffix like "Square-c(#FFFFFF)".
+    // Splits that into { name: "Square", color: {r,g,b} } (0-1 floats,
+    // ready for glColor3f). If there's no "-c(#hex)" suffix, color is null.
+    function parseGroupLabel(text) {
+        const match = /^(.*?)c\(\s*#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\s*\)\s*$/.exec(text);
+        if (!match) {
+            return { name: text, color: null };
+        }
+
+        const name = match[1].trim();
+        let hex = match[2];
+        if (hex.length === 3) {
+            hex = hex.split("").map(ch => ch + ch).join("");
+        }
+
+        const color = {
+            r: parseInt(hex.slice(0, 2), 16) / 255,
+            g: parseInt(hex.slice(2, 4), 16) / 255,
+            b: parseInt(hex.slice(4, 6), 16) / 255
+        };
+
+        return { name, color };
+    }
+
     // Walk every object in algebra-view (creation) order. Each text
     // object starts a new group/shape; points collected after it
     // belong to that shape, until the next text object starts a new one.
@@ -188,7 +216,7 @@ function extractGeoGebraPoints(config) {
     }
 
     const groups = [];
-    let currentGroup = { name: null, candidates: [] };
+    let currentGroup = { name: null, color: null, candidates: [] };
     groups.push(currentGroup);
 
     for (const rawName of allNames) {
@@ -200,7 +228,8 @@ function extractGeoGebraPoints(config) {
         }
 
         if (type === "text") {
-            currentGroup = { name: getTextValue(rawName), candidates: [] };
+            const { name, color } = parseGroupLabel(getTextValue(rawName));
+            currentGroup = { name, color, candidates: [] };
             groups.push(currentGroup);
             continue;
         }
@@ -282,6 +311,7 @@ function extractGeoGebraPoints(config) {
 
         outputGroups.push({
             name: group.name,
+            color: group.color,
             lines: lines,
             count: lines.length,
             loopLimitUsed: loopLimitUsed
