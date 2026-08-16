@@ -75,9 +75,19 @@ getData.addEventListener("click", async () => {
       throw new Error(data.error);
     }
 
-    output.value = "glBegin(GL_POLYGON);\n\t" + data.lines.join("\n\t") + "\nglEnd();";
+    const blocks = data.groups.map(group => {
+      const header = group.name ? `// ${group.name}\n` : "";
+      return (
+        header +
+        "glBegin(GL_POLYGON);\n\t" +
+        group.lines.join("\n\t") +
+        "\nglEnd();"
+      );
+    });
+
+    output.value = blocks.join("\n\n");
     status.textContent =
-      `${data.count} point(s) found. Loop limit used: ${data.loopLimitUsed}.`;
+      `${data.groups.length} shape(s), ${data.totalCount} point(s) found.`;
   } catch (error) {
     status.textContent = error.message;
   }
@@ -152,28 +162,51 @@ function extractGeoGebraPoints(config) {
         }
     }
 
-    // Gather every point object GeoGebra currently knows about.
-    let allNames = [];
-    try {
-        allNames = ggbApplet.getAllObjectNames("point");
-    } catch (e) {
-        // Older GeoGebra builds: no type filter argument supported.
+    // Pull a plain string value out of a text object, e.g. the
+    // algebra-view label "Square" -> "Square" (strip "name = " prefix
+    // and surrounding quotes that getValueString tends to include).
+    function getTextValue(name) {
         try {
-            allNames = ggbApplet.getAllObjectNames().filter(n => {
-                try {
-                    return ggbApplet.getObjectType(n) === "point";
-                } catch (e2) {
-                    return false;
-                }
-            });
-        } catch (e3) {
-            return { error: "Could not read objects from GeoGebra." };
+            let v = ggbApplet.getValueString(name);
+            const eqIdx = v.indexOf("=");
+            if (eqIdx !== -1) v = v.slice(eqIdx + 1);
+            v = v.trim().replace(/^"(.*)"$/, "$1");
+            return v || name;
+        } catch (e) {
+            return name;
         }
     }
 
-    const candidates = [];
+    // Walk every object in algebra-view (creation) order. Each text
+    // object starts a new group/shape; points collected after it
+    // belong to that shape, until the next text object starts a new one.
+    let allNames = [];
+    try {
+        allNames = ggbApplet.getAllObjectNames();
+    } catch (e) {
+        return { error: "Could not read objects from GeoGebra." };
+    }
+
+    const groups = [];
+    let currentGroup = { name: null, candidates: [] };
+    groups.push(currentGroup);
 
     for (const rawName of allNames) {
+        let type;
+        try {
+            type = ggbApplet.getObjectType(rawName);
+        } catch (e) {
+            continue;
+        }
+
+        if (type === "text") {
+            currentGroup = { name: getTextValue(rawName), candidates: [] };
+            groups.push(currentGroup);
+            continue;
+        }
+
+        if (type !== "point") continue;
+
         const match = nameRegex.exec(rawName);
         if (!match) continue; // ignore points not named like A, B1, C_2...
 
@@ -184,62 +217,86 @@ function extractGeoGebraPoints(config) {
         if (skipped.indexOf(normName) !== -1) continue;
         if (!isActive(rawName)) continue;
 
-        candidates.push({ rawName, letters, suffixNum });
+        currentGroup.candidates.push({ rawName, letters, suffixNum });
     }
 
-    // Apply loop limit: 1 = only A-Z (suffixNum 0), 2 = through *1, etc.
-    let loopLimitUsed;
-    let filtered = candidates;
+    // Drop the leading placeholder group if nothing landed in it
+    // before the first text label (avoids an empty unnamed shape).
+    if (groups.length > 1 && groups[0].candidates.length === 0) {
+        groups.shift();
+    }
 
-    if (config.mode === "custom") {
-        const limit = Math.max(1, Math.min(100, Number(config.loopLimit) || 1));
-        filtered = candidates.filter(c => c.suffixNum <= limit - 1);
-        loopLimitUsed = limit;
-    } else {
-        // AUTO MODE: include every group present, but stop counting
-        // once we hit the first "gap" (a suffix number with nothing
-        // in it at all), same intent as before, just based on real data.
-        const maxSuffix = candidates.reduce(
-            (m, c) => Math.max(m, c.suffixNum), 0
-        );
-        const presentSuffixes = new Set(candidates.map(c => c.suffixNum));
+    const outputGroups = [];
+    let totalCount = 0;
 
-        let lastContiguous = 0;
-        for (let i = 0; i <= maxSuffix; i++) {
-            if (presentSuffixes.has(i)) {
-                lastContiguous = i;
-            } else {
-                break;
+    for (const group of groups) {
+        if (group.candidates.length === 0) continue;
+
+        // Apply loop limit per shape: 1 = only A-Z (suffixNum 0), 2 = through *1, etc.
+        let loopLimitUsed;
+        let filtered = group.candidates;
+
+        if (config.mode === "custom") {
+            const limit = Math.max(1, Math.min(100, Number(config.loopLimit) || 1));
+            filtered = group.candidates.filter(c => c.suffixNum <= limit - 1);
+            loopLimitUsed = limit;
+        } else {
+            // AUTO MODE: include every suffix group present in this shape,
+            // but stop counting once we hit the first "gap".
+            const maxSuffix = group.candidates.reduce(
+                (m, c) => Math.max(m, c.suffixNum), 0
+            );
+            const presentSuffixes = new Set(group.candidates.map(c => c.suffixNum));
+
+            let lastContiguous = 0;
+            for (let i = 0; i <= maxSuffix; i++) {
+                if (presentSuffixes.has(i)) {
+                    lastContiguous = i;
+                } else {
+                    break;
+                }
             }
+
+            filtered = group.candidates.filter(c => c.suffixNum <= lastContiguous);
+            loopLimitUsed = lastContiguous + 1;
         }
 
-        filtered = candidates.filter(c => c.suffixNum <= lastContiguous);
-        loopLimitUsed = lastContiguous + 1;
+        // Sort: suffix group first (A-Z, then 1-group, then 2-group...),
+        // then alphabetically by letters within each group.
+        filtered.sort((a, b) => {
+            if (a.suffixNum !== b.suffixNum) return a.suffixNum - b.suffixNum;
+            if (a.letters < b.letters) return -1;
+            if (a.letters > b.letters) return 1;
+            return 0;
+        });
+
+        const pointCoordinates = filtered.map(c => ({
+            name: c.rawName,
+            x: ggbApplet.getXcoord(c.rawName),
+            y: ggbApplet.getYcoord(c.rawName)
+        }));
+
+        const lines = pointCoordinates.map(point =>
+            `glVertex2f(${point.x.toFixed(2)}, ${point.y.toFixed(2)});//${point.name}`
+        );
+
+        outputGroups.push({
+            name: group.name,
+            lines: lines,
+            count: lines.length,
+            loopLimitUsed: loopLimitUsed
+        });
+
+        totalCount += lines.length;
     }
 
-    // Sort: suffix group first (A-Z, then 1-group, then 2-group...),
-    // then alphabetically by letters within each group.
-    filtered.sort((a, b) => {
-        if (a.suffixNum !== b.suffixNum) return a.suffixNum - b.suffixNum;
-        if (a.letters < b.letters) return -1;
-        if (a.letters > b.letters) return 1;
-        return 0;
-    });
-
-    const pointCoordinates = filtered.map(c => ({
-        name: c.rawName,
-        x: ggbApplet.getXcoord(c.rawName),
-        y: ggbApplet.getYcoord(c.rawName)
-    }));
-
-    const lines = pointCoordinates.map(point =>
-        `glVertex2f(${point.x.toFixed(2)}, ${point.y.toFixed(2)});//${point.name}`
-    );
+    if (outputGroups.length === 0) {
+        return { error: "No active points found." };
+    }
 
     return {
-        lines: lines,
-        count: lines.length,
-        loopLimitUsed: loopLimitUsed
+        groups: outputGroups,
+        totalCount: totalCount
     };
 }
 
