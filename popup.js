@@ -34,7 +34,7 @@ async function saveSettings() {
 }
 
 getData.addEventListener("click", async () => {
-  output.value = "";
+
   status.textContent = "Reading GeoGebra...";
 
   try {
@@ -75,7 +75,7 @@ getData.addEventListener("click", async () => {
       throw new Error(data.error);
     }
 
-    output.value = data.lines.join("\n");
+    output.value = "glBegin(GL_POLYGON);\n\t" + data.lines.join("\n\t") + "\nglEnd();";
     status.textContent =
       `${data.count} point(s) found. Loop limit used: ${data.loopLimitUsed}.`;
   } catch (error) {
