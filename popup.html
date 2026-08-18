@@ -9,6 +9,47 @@
   <div class="container">
     <h2>GeoGebra Point Extractor</h2>
 
+    <button id="howToUseBtn" type="button" class="secondary">How to Use</button>
+
+    <div id="howToUse" class="hidden">
+      <h3>How to use this extension</h3>
+
+      <p><strong>Step 1 — Open your GeoGebra page.</strong><br>
+      Make sure the tab you're on actually has the GeoGebra applet loaded
+      (the graphing tool with your points and shapes on it).</p>
+
+      <p><strong>Step 2 — Click the extension icon</strong> to open this
+      popup (you're already here!).</p>
+
+      <p><strong>Step 3 — "Skipped points" box.</strong><br>
+      Type the names of any points you want to leave out, separated by
+      commas — for example <code>X,Y,X1,Y1</code>. These are ignored even
+      if they're visible on the page. Leave the default if you're not
+      sure. Points that are hidden or disabled in GeoGebra are always
+      skipped automatically, no need to list them here.</p>
+
+      <p><strong>Step 4 — Click "Get Data."</strong><br>
+      This reads every point currently in your GeoGebra file and turns
+      it into coordinate code, shown in the big "Output" box below.
+      Points are grouped by shape and sorted automatically.</p>
+
+      <p><strong>Step 5 — Click "Copy"</strong> to copy everything in the
+      Output box to your clipboard, ready to paste wherever you need it.</p>
+
+      <p><strong>Bonus: Color Picker.</strong><br>
+      Click "Pick Color from Screen," then click on any color anywhere on
+      your screen (even outside GeoGebra). The hex code (like
+      <code>#ff5733</code>) appears in the box and is copied to your
+      clipboard automatically.</p>
+
+      <p><strong>Tip:</strong> If nothing shows up in Output, double
+      check you're on the right tab and that your points aren't named
+      something the extractor doesn't recognize (it looks for names like
+      A, B, A1, B2, C_3, etc.).</p>
+
+      <button id="closeHowToUse" type="button" class="secondary">Got it, close this</button>
+    </div>
+
     <label>Skipped points</label>
     <input id="skippedPoints" type="text" value="X,Y,X1,Y1">
 

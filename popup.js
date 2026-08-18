@@ -5,6 +5,17 @@ const status = document.getElementById("status");
 const copyBtn = document.getElementById("copyBtn");
 const pickColorBtn = document.getElementById("pickColorBtn");
 const colorResult = document.getElementById("colorResult");
+const howToUseBtn = document.getElementById("howToUseBtn");
+const howToUse = document.getElementById("howToUse");
+const closeHowToUse = document.getElementById("closeHowToUse");
+
+howToUseBtn.addEventListener("click", () => {
+  howToUse.classList.toggle("hidden");
+});
+
+closeHowToUse.addEventListener("click", () => {
+  howToUse.classList.add("hidden");
+});
 
 async function loadSettings() {
   const data = await chrome.storage.local.get(["skippedPoints"]);

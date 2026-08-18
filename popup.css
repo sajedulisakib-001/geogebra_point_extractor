@@ -76,6 +76,38 @@ button.secondary:hover {
   display: none;
 }
 
+#howToUse {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid #d9dde3;
+  border-radius: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+#howToUse h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+#howToUse p {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+#howToUse code {
+  background: #eef1f5;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 12px;
+}
+
+#howToUse button {
+  margin-top: 4px;
+}
+
 #status {
   margin-top: 8px;
   font-size: 12px;
