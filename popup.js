@@ -1,34 +1,18 @@
-const loopMode = document.getElementById("loopMode");
-const customBox = document.getElementById("customBox");
-const loopLimit = document.getElementById("loopLimit");
 const skippedPoints = document.getElementById("skippedPoints");
 const output = document.getElementById("output");
 const getData = document.getElementById("getData");
 const status = document.getElementById("status");
 const copyBtn = document.getElementById("copyBtn");
-
-loopMode.addEventListener("change", () => {
-  customBox.classList.toggle("hidden", loopMode.value !== "custom");
-});
+const pickColorBtn = document.getElementById("pickColorBtn");
+const colorResult = document.getElementById("colorResult");
 
 async function loadSettings() {
-  const data = await chrome.storage.local.get([
-    "loopMode",
-    "loopLimit",
-    "skippedPoints"
-  ]);
-
-  if (data.loopMode) loopMode.value = data.loopMode;
-  if (data.loopLimit) loopLimit.value = data.loopLimit;
+  const data = await chrome.storage.local.get(["skippedPoints"]);
   if (data.skippedPoints) skippedPoints.value = data.skippedPoints;
-
-  customBox.classList.toggle("hidden", loopMode.value !== "custom");
 }
 
 async function saveSettings() {
   await chrome.storage.local.set({
-    loopMode: loopMode.value,
-    loopLimit: Number(loopLimit.value),
     skippedPoints: skippedPoints.value
   });
 }
@@ -50,8 +34,6 @@ getData.addEventListener("click", async () => {
     }
 
     const config = {
-      mode: loopMode.value,
-      loopLimit: Number(loopLimit.value),
       skippedPoints: skippedPoints.value
         .split(",")
         .map(x => x.trim().toUpperCase())
@@ -124,6 +106,39 @@ copyBtn.addEventListener("click", async () => {
   }
 });
 
+pickColorBtn.addEventListener("click", async () => {
+  // Triggered directly by a real click inside the popup, so this counts
+  // as a genuine user gesture and EyeDropper opens reliably -- unlike
+  // routing through a keyboard-shortcut command + injected script, which
+  // Chrome does not reliably treat as a user gesture for this API.
+  if (!window.EyeDropper) {
+    status.textContent = "Color picker isn't supported in this browser.";
+    return;
+  }
+
+  try {
+    const eyeDropper = new EyeDropper();
+    const result = await eyeDropper.open();
+
+    colorResult.value = result.sRGBHex;
+
+    try {
+      await navigator.clipboard.writeText(result.sRGBHex);
+      status.textContent = `${result.sRGBHex} copied to clipboard.`;
+    } catch (clipboardError) {
+      status.textContent =
+        `Picked ${result.sRGBHex} (couldn't auto-copy -- click the field and copy manually).`;
+    }
+  } catch (error) {
+    // AbortError = user pressed Escape / clicked away to cancel -- expected.
+    if (error && error.name === "AbortError") {
+      status.textContent = "Color pick cancelled.";
+      return;
+    }
+    status.textContent = "Color picker failed to open. Try again.";
+  }
+});
+
 function extractGeoGebraPoints(config) {
     if (typeof ggbApplet === "undefined") {
         return {
@@ -174,7 +189,7 @@ function extractGeoGebraPoints(config) {
             let v = ggbApplet.getValueString(name);
             const eqIdx = v.indexOf("=");
             if (eqIdx !== -1) v = v.slice(eqIdx + 1);
-            v = v.trim().replace(/^"(.*)"$/, "$1");
+            v = v.trim().replace(/^["“”](.*)["“”]$/, "$1").trim();
             return v || name;
         } catch (e) {
             return name;
@@ -185,7 +200,7 @@ function extractGeoGebraPoints(config) {
     // Splits that into { name: "Square", color: {r,g,b} } (0-1 floats,
     // ready for glColor3f). If there's no "-c(#hex)" suffix, color is null.
     function parseGroupLabel(text) {
-        const match = /^(.*?)c\(\s*#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\s*\)\s*$/.exec(text);
+        const match = /^(.*?)-c\(\s*#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\s*\)\s*$/.exec(text);
         if (!match) {
             return { name: text, color: null };
         }
@@ -261,34 +276,10 @@ function extractGeoGebraPoints(config) {
     for (const group of groups) {
         if (group.candidates.length === 0) continue;
 
-        // Apply loop limit per shape: 1 = only A-Z (suffixNum 0), 2 = through *1, etc.
-        let loopLimitUsed;
-        let filtered = group.candidates;
-
-        if (config.mode === "custom") {
-            const limit = Math.max(1, Math.min(100, Number(config.loopLimit) || 1));
-            filtered = group.candidates.filter(c => c.suffixNum <= limit - 1);
-            loopLimitUsed = limit;
-        } else {
-            // AUTO MODE: include every suffix group present in this shape,
-            // but stop counting once we hit the first "gap".
-            const maxSuffix = group.candidates.reduce(
-                (m, c) => Math.max(m, c.suffixNum), 0
-            );
-            const presentSuffixes = new Set(group.candidates.map(c => c.suffixNum));
-
-            let lastContiguous = 0;
-            for (let i = 0; i <= maxSuffix; i++) {
-                if (presentSuffixes.has(i)) {
-                    lastContiguous = i;
-                } else {
-                    break;
-                }
-            }
-
-            filtered = group.candidates.filter(c => c.suffixNum <= lastContiguous);
-            loopLimitUsed = lastContiguous + 1;
-        }
+        // No cap, no gap-detection: every active, non-skipped point that
+        // was collected for this shape gets included, regardless of how
+        // high its suffix number goes (A, A1 ... A9, A10, A11, ...).
+        const filtered = group.candidates;
 
         // Sort: suffix group first (A-Z, then 1-group, then 2-group...),
         // then alphabetically by letters within each group.
@@ -313,8 +304,7 @@ function extractGeoGebraPoints(config) {
             name: group.name,
             color: group.color,
             lines: lines,
-            count: lines.length,
-            loopLimitUsed: loopLimitUsed
+            count: lines.length
         });
 
         totalCount += lines.length;

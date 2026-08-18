@@ -9,19 +9,14 @@
   <div class="container">
     <h2>GeoGebra Point Extractor</h2>
 
-    <label>Loop mode</label>
-    <select id="loopMode">
-      <option value="auto">Auto</option>
-      <option value="custom">Custom</option>
-    </select>
-
-    <div id="customBox" class="hidden">
-      <label>Custom loop limit</label>
-      <input id="loopLimit" type="number" min="1" max="100" value="3">
-    </div>
-
     <label>Skipped points</label>
     <input id="skippedPoints" type="text" value="X,Y,X1,Y1">
+
+    <label>Color picker</label>
+    <div class="btnRow">
+      <button id="pickColorBtn" type="button">Pick Color from Screen</button>
+    </div>
+    <input id="colorResult" type="text" placeholder="Picked color appears here..." readonly>
 
     <label>Output</label>
     <textarea id="output" placeholder="Coordinates will appear here..." readonly></textarea>
