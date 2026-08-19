@@ -6,15 +6,9 @@ const copyBtn = document.getElementById("copyBtn");
 const pickColorBtn = document.getElementById("pickColorBtn");
 const colorResult = document.getElementById("colorResult");
 const howToUseBtn = document.getElementById("howToUseBtn");
-const howToUse = document.getElementById("howToUse");
-const closeHowToUse = document.getElementById("closeHowToUse");
 
 howToUseBtn.addEventListener("click", () => {
-  howToUse.classList.toggle("hidden");
-});
-
-closeHowToUse.addEventListener("click", () => {
-  howToUse.classList.add("hidden");
+  chrome.tabs.create({ url: chrome.runtime.getURL("help.html") });
 });
 
 async function loadSettings() {

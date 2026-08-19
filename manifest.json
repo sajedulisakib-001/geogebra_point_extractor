@@ -3,10 +3,21 @@
   "name": "GeoGebra Point Extractor",
   "version": "1.0.0",
   "description": "Extract existing GeoGebra point coordinates from the active tab.",
-  "permissions": ["activeTab", "scripting", "storage", "clipboardWrite"],
+  "permissions": ["activeTab", "scripting", "storage", "clipboardWrite", "commands"],
   "action": {
     "default_title": "GeoGebra Point Extractor",
     "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "pick_color": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+U",
+        "mac": "Command+Shift+U"
+      },
+      "description": "Pick a color from anywhere on screen"
+    }
   }
 }
-
