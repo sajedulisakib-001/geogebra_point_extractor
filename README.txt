@@ -35,13 +35,14 @@ Color picker:
   to this extension if needed.
 
 Extraction:
-- Every point named like A, B, A1, B_2, AB12, etc. is included --
-  there's no cap and no gap-stopping, so labels like Z9, Z10, Z11...
-  are all picked up, not just the first two suffix groups.
+- Points named like A, B, A1, B_2, AB12, etc. are included, grouped by
+  the text label that precedes them in the algebra view and sorted by
+  suffix number then by letter.
 - Points that are hidden/deselected, undefined, or listed in
-  "Skipped points" are left out, exactly as before.
-- Points are grouped by the text label that precedes them in the
-  algebra view, and sorted by suffix number then by letter.
+  "Skipped points" are left out.
+- KNOWN LIMIT: reliably picks up subscripts A through Z9 (single digit
+  only). Points named with a two-digit-or-higher subscript (A10 and
+  beyond) are not currently guaranteed to be picked up.
 
 Note:
 The extension requires a page where the GeoGebra JavaScript applet exposes

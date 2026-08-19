@@ -103,6 +103,11 @@ body {
   font-family: monospace;
 }
 
+.content a {
+  color: #2563eb;
+  font-weight: bold;
+}
+
 .content pre {
   background: #1f2937;
   color: #e5e7eb;

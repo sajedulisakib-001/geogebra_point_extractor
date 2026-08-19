@@ -7,27 +7,35 @@
 </head>
 <body>
   <div class="container">
-    <h2>GeoGebra Point Extractor</h2>
-
-    <button id="howToUseBtn" type="button" class="secondary">How to Use</button>
-
-    <label>Skipped points</label>
-    <input id="skippedPoints" type="text" value="X,Y,X1,Y1">
-
-    <label>Color picker</label>
-    <div class="btnRow">
-      <button id="pickColorBtn" type="button">Pick Color from Screen</button>
+    <div class="header">
+      <h2>GeoGebra Point Extractor</h2>
+      <button id="howToUseBtn" type="button" class="secondary small">How to Use</button>
     </div>
-    <div class="hint">Shortcut: Ctrl+Shift+U (Cmd+Shift+U on Mac)</div>
-    <input id="colorResult" type="text" placeholder="Picked color appears here..." readonly>
 
-    <label>Output</label>
-    <textarea id="output" placeholder="Coordinates will appear here..." readonly></textarea>
-
-    <div class="btnRow">
-      <button id="getData">Get Data</button>
-      <button id="copyBtn" class="secondary">Copy</button>
+    <div class="card">
+      <label for="skippedPoints">Skipped points</label>
+      <input id="skippedPoints" type="text" value="X,Y,X1,Y1">
     </div>
+
+    <div class="card">
+      <label>Color picker</label>
+      <div class="btnRow">
+        <button id="pickColorBtn" type="button">Pick Color from Screen</button>
+      </div>
+      <div class="hint">Shortcut: Ctrl+Shift+U (Cmd+Shift+U on Mac)</div>
+      <input id="colorResult" type="text" placeholder="Picked color appears here..." readonly>
+    </div>
+
+    <div class="card">
+      <label for="output">Output</label>
+      <textarea id="output" placeholder="Coordinates will appear here..." readonly></textarea>
+
+      <div class="btnRow">
+        <button id="getData">Get Data</button>
+        <button id="copyBtn" class="secondary">Copy</button>
+      </div>
+    </div>
+
     <div id="status"></div>
   </div>
 

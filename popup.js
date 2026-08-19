@@ -163,6 +163,9 @@ function extractGeoGebraPoints(config) {
 
     // Matches "A", "A1", "A_1", "AB12", "AB_12", etc.
     // Captures the leading letters and the trailing number (if any).
+    // Note: only single-digit subscripts (up to _9) are reliably
+    // recognized -- see the "Point naming" section of the How to Use
+    // page for the current known limit.
     const nameRegex = /^([A-Z]+)_?(\d*)$/;
 
     function isActive(name) {
@@ -281,9 +284,9 @@ function extractGeoGebraPoints(config) {
     for (const group of groups) {
         if (group.candidates.length === 0) continue;
 
-        // No cap, no gap-detection: every active, non-skipped point that
-        // was collected for this shape gets included, regardless of how
-        // high its suffix number goes (A, A1 ... A9, A10, A11, ...).
+        // Every active, non-skipped point collected for this shape is
+        // included, in the order it was found (subject to the single-
+        // digit subscript limit the naming pattern above enforces).
         const filtered = group.candidates;
 
         // Sort: suffix group first (A-Z, then 1-group, then 2-group...),

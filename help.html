@@ -17,10 +17,11 @@
       <a href="#getting-started" class="nav-link">1. Getting started</a>
       <a href="#skipped-points" class="nav-link">2. Skipped points</a>
       <a href="#get-data" class="nav-link">3. Get Data</a>
-      <a href="#copy" class="nav-link">4. Copy the output</a>
-      <a href="#color-picker" class="nav-link">5. Color picker</a>
-      <a href="#reading-output" class="nav-link">6. Reading the output</a>
-      <a href="#troubleshooting" class="nav-link">7. Troubleshooting</a>
+      <a href="#point-naming" class="nav-link">4. Point naming</a>
+      <a href="#copy" class="nav-link">5. Copy the output</a>
+      <a href="#color-picker" class="nav-link">6. Color picker</a>
+      <a href="#reading-output" class="nav-link">7. Reading the output</a>
+      <a href="#troubleshooting" class="nav-link">8. Troubleshooting</a>
     </nav>
 
     <main class="content">
@@ -72,8 +73,32 @@
         were found.</p>
       </section>
 
+      <section id="point-naming">
+        <h2>4. Point naming</h2>
+        <p>The extractor recognizes:</p>
+        <ul>
+          <li>Plain letters: <code>A</code>, <code>B</code>,
+          <code>AB</code></li>
+          <li>Single-digit subscripts: <code>A1</code>, <code>A_1</code>,
+          up through <code>Z9</code></li>
+        </ul>
+        <p>All of these count as valid points and get pulled into the
+        output, sorted first by subscript number and then alphabetically
+        within each group (so you'll see <code>A, B, ... Z, A1, B1, ...
+        Z9</code>).</p>
+        <p class="note"><strong>Known limit:</strong> points with a
+        two-digit-or-higher subscript (<code>A10</code> and beyond) are
+        not currently guaranteed to be picked up. If your construction
+        needs more than 10 points per letter (A, A1, A2 ... A9), name
+        the extras differently — for example, a new letter — rather than
+        relying on subscripts past 9.</p>
+        <p class="note">A point is otherwise only <em>excluded</em> for
+        one of two reasons: it's hidden/deselected in GeoGebra's algebra
+        view, or its name is in the "Skipped points" box.</p>
+      </section>
+
       <section id="copy">
-        <h2>4. Copy the output</h2>
+        <h2>5. Copy the output</h2>
         <p>Once you have output, click <strong>Copy</strong> to copy the
         entire contents of the Output box to your clipboard. You'll see
         the button briefly change to "Copied!" to confirm it worked. From
@@ -82,7 +107,7 @@
       </section>
 
       <section id="color-picker">
-        <h2>5. Color picker</h2>
+        <h2>6. Color picker</h2>
         <p>There are two ways to use it:</p>
         <ul>
           <li><strong>From the popup:</strong> click <strong>Pick Color
@@ -105,7 +130,7 @@
       </section>
 
       <section id="reading-output">
-        <h2>6. Reading the output</h2>
+        <h2>7. Reading the output</h2>
         <p>Each shape in the output looks something like this:</p>
         <pre>// Square
 glColor3f(1.00, 0.34, 0.20);
@@ -129,15 +154,14 @@ glEnd();</pre>
       </section>
 
       <section id="troubleshooting">
-        <h2>7. Troubleshooting</h2>
+        <h2>8. Troubleshooting</h2>
         <p><strong>Nothing shows up in Output:</strong></p>
         <ul>
           <li>Double check you're on the tab with the GeoGebra applet
           loaded — the extension reads the <em>active</em> tab.</li>
           <li>Make sure your points are named in a way the extractor
-          recognizes: a letter or letters, optionally followed by a
-          number — <code>A</code>, <code>B1</code>, <code>C_2</code>,
-          <code>AB12</code>, and so on.</li>
+          recognizes — see <a href="#point-naming">Point naming</a>
+          above.</li>
           <li>Check that your points aren't all hidden/deselected in the
           GeoGebra algebra view, or all listed in "Skipped points."</li>
         </ul>
@@ -155,21 +179,7 @@ glEnd();</pre>
           <li>This feature needs a fairly recent version of Chrome; if
           it's still not working, try updating your browser.</li>
         </ul>
-        <p class="note"><strong>Why the shortcut didn't work in an
-        earlier version:</strong> the keyboard-shortcut logic itself was
-        always correct, but the extension's <code>manifest.json</code>
-        never registered <code>background.js</code> as the background
-        service worker (no <code>"background": { "service_worker":
-        "background.js" }</code> entry existed). That meant the
-        <code>chrome.commands.onCommand</code> listener inside it could
-        never run, no matter how the code was written — Chrome simply
-        never loaded the file. This was confirmed with a minimal
-        standalone test extension containing the same shortcut logic but
-        with the service worker correctly registered, which worked
-        immediately. Once that one manifest entry was added here, the
-        shortcut started working the same way.</p>
       </section>
-
     </main>
   </div>
 
